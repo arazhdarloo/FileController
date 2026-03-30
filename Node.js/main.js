@@ -1,11 +1,15 @@
 const readline = require('readline')
 const fs = require('fs')
+const path = require('path')
 
 console.clear()
 
 const intro = `
 ------------------- list of commands -------------------
 1 - set-path => structure: './test' || 'C:\\Users\\Alireza\\Desktop\\Projects'
+2 - files => {
+  get-all => write files on './log/filesList-log.json'
+}
 
 enter 'exit' to finish the program
 --------------------------------------------------------
@@ -19,6 +23,7 @@ const rl = readline.createInterface({
 const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 let currentPath = ""
+let start = true
 
 const commandManagement = async (command) => {
   try {
@@ -31,26 +36,36 @@ const commandManagement = async (command) => {
             currentPath = ''
             currentPath = pathInput
             console.log(`the ${currentPath} added`)
-            await ask("press enter to return...")
-          } else {
-            await ask("press enter to return...")
           }
         } else {
           currentPath = pathInput
           console.log(`the ${currentPath} added`)
-          await ask("press enter to return...")
         }
       } else {
         console.log('its a wrong path')
-        await ask("press enter to return...")
+      }
+    } else if (command == 'files') {
+      if (currentPath !== '') {
+        const filesInput = await ask("files - enter your command: ")
+        if (filesInput == 'get-all') {
+          const logDir = path.join(__dirname, 'log');
+          if (!checkFolder(logDir)) {
+            await fs.promises.mkdir('log')
+            console.log("log folder created")
+          }
+
+          const files = JSON.stringify(fs.readdirSync(path.join(__dirname, currentPath)), null, 2)
+          fs.writeFileSync(path.join(logDir, 'filesList-log.json'), files, 'utf-8')
+          console.log('saved to log/filesList-log.json')
+        }
+      } else {
+        console.log("please enter a path")
       }
     } else {
       console.log('unknom command!')
-      await ask("press enter to return...")
     }
   } catch (err) {
     console.log(`it has an error to process command - ${err}`)
-    await ask("press enter to return...")
   }
 }
 
@@ -69,7 +84,10 @@ const checkFolder = (path) => {
 
 (async () => {
   while (true) {
-    console.log(intro)
+    if (start) {
+      console.log(intro)
+      start = false
+    }
 
     const command = await ask("enter your command : ")
 
