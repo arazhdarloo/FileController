@@ -11,6 +11,10 @@ const intro = `
 }
 2 - files => {
   get-all => write files on './log/filesList-log.json'
+  set-pattern => {
+    enter the structure. eg: '12-movie.mp4'
+    enter split symbol. eg: ' - || , || _ '  
+  }
 }
 
 enter 'help' to show this message again
@@ -27,6 +31,10 @@ const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 let currentPath = ""
 let start = true
+let splitStructure = {
+  index: null,
+  symbol: null
+}
 
 const commandManagement = async (command) => {
   try {
@@ -63,6 +71,22 @@ const commandManagement = async (command) => {
           const files = JSON.stringify(fs.readdirSync(path.join(__dirname, currentPath)), null, 2)
           fs.writeFileSync(path.join(logDir, 'filesList-log.json'), files, 'utf-8')
           console.log('saved to log/filesList-log.json')
+        }else if(filesInput == 'set-pattern'){
+          const structure = await ask('files - enter the structure : ')
+          const symbol = await ask('files - enter the symbol : ')
+
+          const result = structure.split(symbol)
+          result.forEach((element, index) => {
+            console.log(`${index} : ${element}`)
+          })
+          const index = await ask("enter the currect index for sorting : ")
+          console.log(result[Number(index)])
+          const confirm = await ask("is that true? (y,n)")
+          if(confirm == "y"){
+            splitStructure.index = index
+            splitStructure.symbol = symbol
+            console.log(`${JSON.stringify(splitStructure, null, 2)} added.`)
+          }
         }
       } else {
         console.log("please enter a path")
