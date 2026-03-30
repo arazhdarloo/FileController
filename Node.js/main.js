@@ -6,11 +6,14 @@ console.clear()
 
 const intro = `
 ------------------- list of commands -------------------
-1 - set-path => structure: './test' || 'C:\\Users\\Alireza\\Desktop\\Projects'
+1 - path => {
+  set => structure: './test' || 'C:\\Users\\Alireza\\Desktop\\Projects'
+}
 2 - files => {
   get-all => write files on './log/filesList-log.json'
 }
 
+enter 'help' to show this message again
 enter 'exit' to finish the program
 --------------------------------------------------------
 `
@@ -27,26 +30,29 @@ let start = true
 
 const commandManagement = async (command) => {
   try {
-    if (command == "set-path") {
-      const pathInput = await ask("enter path : ")
-      if (checkFolder(pathInput)) {
-        if (currentPath !== "") {
-          const confirm = await ask(`you already added ${currentPath}. do you wanna clear that? (y,n)`)
-          if (confirm == "y") {
-            currentPath = ''
-            currentPath = pathInput
+    if (command == "path") {
+      const pathInput = await ask("path - enter your command : ")
+      if (pathInput == "set") {
+        const setInput = await ask("enter path : ")
+        if (checkFolder(setInput)) {
+          if (currentPath !== "") {
+            const confirm = await ask(`you already added ${currentPath}. do you wanna clear that? (y,n)`)
+            if (confirm == "y") {
+              currentPath = ''
+              currentPath = setInput
+              console.log(`the ${currentPath} added`)
+            }
+          } else {
+            currentPath = setInput
             console.log(`the ${currentPath} added`)
           }
         } else {
-          currentPath = pathInput
-          console.log(`the ${currentPath} added`)
+          console.log('its a wrong path')
         }
-      } else {
-        console.log('its a wrong path')
       }
     } else if (command == 'files') {
       if (currentPath !== '') {
-        const filesInput = await ask("files - enter your command: ")
+        const filesInput = await ask("files - enter your command : ")
         if (filesInput == 'get-all') {
           const logDir = path.join(__dirname, 'log');
           if (!checkFolder(logDir)) {
@@ -90,10 +96,9 @@ const checkFolder = (path) => {
     }
 
     const command = await ask("enter your command : ")
-
-    if (command == 'exit') break
-
-    await commandManagement(command)
+    if (command == "help") console.log(intro)
+    else if (command == 'exit') break
+    else await commandManagement(command)
   }
 
   rl.close()
