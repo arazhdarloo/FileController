@@ -8,6 +8,7 @@ const intro = `
 ------------------- list of commands -------------------
 1 - path => {
   set => structure: './test' || 'C:\\Users\\Alireza\\Desktop\\Projects'
+  get => return the saved path
 }
 2 - files => {
   get-all => write files on './log/filesList-log.json'
@@ -22,6 +23,7 @@ const intro = `
 }
 
 enter 'help' to show this message again
+enter 'break' to close section
 enter 'exit' to finish the program
 --------------------------------------------------------
 `
@@ -40,33 +42,50 @@ let splitStructure = {
   symbol: null
 }
 
+const pathController = async (pathInput) => {
+  try {
+    if (pathInput.includes("set")) {
+      const setInput = await ask("path - enter path : ")
+      if (checkFolder(setInput)) {
+        if (currectPath !== "") {
+          const confirm = await ask(`path - you already added ${currectPath}. do you wanna clear that? (Y,n) `)
+          if (confirm.toLowerCase() == "y" || confirm == "") {
+            currectPath = ''
+            currectPath = setInput
+            console.log(`path - the ${currectPath} added`)
+          }
+        } else {
+          currectPath = setInput
+          console.log(`path - the ${currectPath} added`)
+        }
+      }
+    } else if (pathInput == "get") {
+      if (currectPath !== '') {
+        console.log(`path - your path is '${currectPath}'`)
+      } else {
+        console.log('path - please enter a path.')
+      }
+    } else {
+      console.log('path - its a wrong path')
+    }
+  } catch (err) {
+    console.log(`it has an error to process path - ${err}`)
+  }
+}
+
 const commandManagement = async (command) => {
   try {
     if (command == "path") {
-      const pathInput = await ask("path - enter your command : ")
-      if (pathInput == "set") {
-        const setInput = await ask("enter path : ")
-        if (checkFolder(setInput)) {
-          if (currectPath !== "") {
-            const confirm = await ask(`you already added ${currectPath}. do you wanna clear that? (y,n)`)
-            if (confirm == "y") {
-              currectPath = ''
-              currectPath = setInput
-              console.log(`the ${currectPath} added`)
-            }
-          } else {
-            currectPath = setInput
-            console.log(`the ${currectPath} added`)
-          }
-        } else {
-          console.log('its a wrong path')
-        }
+      while (true) {
+        const pathInput = await ask("path - enter your command : ")
+        if (pathInput == 'break') break
+        await pathController(pathInput)
       }
     } else if (command == 'files') {
       if (currectPath !== '') {
         const filesInput = await ask("files - enter your command : ")
         if (filesInput == 'get-all') {
-          const logDir = path.join(currectPath, 'log');
+          const logDir = path.join('log');
           if (!checkFolder(logDir)) {
             await fs.promises.mkdir('log')
             console.log("log folder created")
