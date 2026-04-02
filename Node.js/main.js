@@ -59,17 +59,53 @@ const pathController = async (pathInput) => {
           console.log(`path - the ${currectPath} added`)
         }
       }
-    } else if (pathInput == "get") {
+    } else if (pathInput.includes("get")) {
       if (currectPath !== '') {
         console.log(`path - your path is '${currectPath}'`)
       } else {
         console.log('path - please enter a path.')
       }
     } else {
-      console.log('path - its a wrong path')
+      console.log('path - its a wrong command')
     }
   } catch (err) {
     console.log(`it has an error to process path - ${err}`)
+  }
+}
+
+const filesController = async (filesInput) => {
+  try {
+    if (filesInput.includes('get-all')) {
+      const logDir = path.join('log')
+      if (!checkFolder(logDir)) {
+        await fs.promises.mkdir('log')
+        console.log("files - log folder created")
+      }
+
+      const files = JSON.stringify(fs.readdirSync(path.join(currectPath)), null, 2)
+      fs.writeFileSync(path.join(logDir, 'filesList-log.json'), files, 'utf-8')
+      console.log('files - saved to log/filesList-log.json')
+    } else if (filesInput.includes('set-pattern')) {
+      const structure = await ask('files - enter the structure : ')
+      const symbol = await ask('files - enter the symbol : ')
+
+      const result = structure.split(symbol)
+      result.forEach((element, index) => {
+        console.log(`${index} : ${element}`)
+      })
+      const index = await ask("files - enter the currect index for sorting : ")
+      console.log(result[Number(index)])
+      const confirm = await ask("files - is that true? (Y,n) ")
+      if (confirm.toLowerCase() == "y" || confirm == "") {
+        splitStructure.index = index
+        splitStructure.symbol = symbol
+        console.log(`files - ${JSON.stringify(splitStructure, null, 2)} added.`)
+      }
+    } else {
+      console.log('files - its a wrong command')
+    }
+  } catch (err) {
+    console.log(`it has an error to process files - ${err}`)
   }
 }
 
@@ -83,33 +119,10 @@ const commandManagement = async (command) => {
       }
     } else if (command == 'files') {
       if (currectPath !== '') {
-        const filesInput = await ask("files - enter your command : ")
-        if (filesInput == 'get-all') {
-          const logDir = path.join('log');
-          if (!checkFolder(logDir)) {
-            await fs.promises.mkdir('log')
-            console.log("log folder created")
-          }
-
-          const files = JSON.stringify(fs.readdirSync(path.join(currectPath)), null, 2)
-          fs.writeFileSync(path.join(logDir, 'filesList-log.json'), files, 'utf-8')
-          console.log('saved to log/filesList-log.json')
-        } else if (filesInput == 'set-pattern') {
-          const structure = await ask('files - enter the structure : ')
-          const symbol = await ask('files - enter the symbol : ')
-
-          const result = structure.split(symbol)
-          result.forEach((element, index) => {
-            console.log(`${index} : ${element}`)
-          })
-          const index = await ask("enter the currect index for sorting : ")
-          console.log(result[Number(index)])
-          const confirm = await ask("is that true? (y,n)")
-          if (confirm == "y") {
-            splitStructure.index = index
-            splitStructure.symbol = symbol
-            console.log(`${JSON.stringify(splitStructure, null, 2)} added.`)
-          }
+        while (true) {
+          const filesInput = await ask("files - enter your command : ")
+          if (filesInput == 'break') break
+          await filesController(filesInput)
         }
       } else {
         console.log("please enter a path")
