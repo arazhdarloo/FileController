@@ -109,6 +109,79 @@ const filesController = async (filesInput) => {
   }
 }
 
+const splitController = async () => {
+  try {
+    const folderName = await ask("split - enter folder name : ")
+    const splitPath = path.join(currectPath, folderName)
+    const folderFiles = fs.readdirSync(currectPath)
+    const currectFile = []
+
+    if (!checkFolder(splitPath)) {
+      await fs.promises.mkdir(splitPath)
+      console.log(`split - '${folderName}' created!`)
+    } else {
+      console.log("split - this folder already exist.")
+    }
+    const fileType = await ask("split - enter the file type (without dot) : ")
+
+    folderFiles.forEach(element => {
+      const splitedElement = element.split('.')
+      const type = splitedElement[splitedElement.length - 1]
+      if (fileType == type) {
+        currectFile.push(element)
+      }
+    })
+    console.log(currectFile)
+
+    const getNumber = (name) => {
+      const result = name.split(splitStructure.symbol)
+      return result[splitStructure.index]
+    }
+
+    const moveFile = (fileName, dest) => {
+      const filePath = path.join(currectPath, fileName)
+      const destPath = path.join(currectPath, dest, fileName)
+      fs.promises.copyFile(filePath, destPath)
+        .then(() => {
+          console.log(`split - ${fileName} moved`)
+          fs.promises.unlink(filePath)
+            .then(() => {
+              console.log(`split - ${fileName} deleted!`)
+            })
+            .catch(err => {
+              console.log(`split - can't delete ${fileName} - ${err}`)
+            })
+        })
+        .catch(err => {
+          console.log(`split - cant move ${fileName} - ${err}`)
+        })
+    }
+
+    const rangeInput = await ask("split - enter the range : ")
+    const range = rangeInput.split('-')
+    const moveFiles = []
+    console.log(range)
+    currectFile.forEach(element => {
+      if (Number(range[0]) <= Number(getNumber(element)) && Number(getNumber(element) <= range[1])) {
+        moveFiles.push(element)
+      }
+    })
+
+    console.log(moveFiles)
+    const confirm = await ask("split - do you wanna move files? (Y,n) ")
+
+    if (confirm.toLowerCase() == "y" || confirm == "") {
+      moveFiles.forEach(element => {
+        moveFile(element, folderName)
+      })
+    }
+
+    console.log("finished")
+  } catch (err) {
+    console.log(`split - it has an error to process split - ${err}`)
+  }
+}
+
 const commandManagement = async (command) => {
   try {
     if (command == "path") {
@@ -129,73 +202,9 @@ const commandManagement = async (command) => {
       }
     } else if (command == 'split') {
       if (currectPath !== "" && splitStructure.index && splitStructure.symbol) {
-        const folderName = await ask("split - enter folder name : ")
-        const splitPath = path.join(currectPath, folderName)
-        const folderFiles = fs.readdirSync(currectPath)
-        const currectFile = []
-
-        if (!checkFolder(splitPath)) {
-          await fs.promises.mkdir(splitPath)
-          console.log(`'${folderName}' created!`)
-        } else {
-          console.log("this folder already exist.")
+        while (true) {
+          await splitController()
         }
-        const fileType = await ask("enter the file type (without dot) : ")
-
-        folderFiles.forEach(element => {
-          const splitedElement = element.split('.')
-          const type = splitedElement[splitedElement.length - 1]
-          if (fileType == type) {
-            currectFile.push(element)
-          }
-        })
-        console.log(currectFile)
-
-        const getNumber = (name) => {
-          const result = name.split(splitStructure.symbol)
-          return result[splitStructure.index]
-        }
-
-        const moveFile = (fileName, dest) => {
-          const filePath = path.join(currectPath, fileName)
-          const destPath = path.join(currectPath, dest, fileName)
-          fs.promises.copyFile(filePath, destPath)
-            .then(() => {
-              console.log(`${fileName} moved`)
-              fs.promises.unlink(filePath)
-                .then(() => {
-                  console.log(`${fileName} deleted!`)
-                })
-                .catch(err => {
-                  console.log(`cant delete ${fileName} - ${err}`)
-                })
-            })
-            .catch(err => {
-              console.log(`cant move ${fileName} - ${err}`)
-            })
-        }
-
-        const rangeInput = await ask("enter the range : ")
-        const range = rangeInput.split('-')
-        const moveFiles = []
-        console.log(range)
-        currectFile.forEach(element => {
-          if (Number(range[0]) <= Number(getNumber(element)) && Number(getNumber(element) <= range[1])) {
-            moveFiles.push(element)
-          }
-        })
-
-        console.log(moveFiles)
-        const confirm = await ask("do you wanna move files? (y,n)")
-
-        if (confirm == 'y') {
-          moveFiles.forEach(element => {
-            moveFile(element, folderName)
-          })
-        }
-
-        console.log("finished")
-
       } else {
         console.log("enter path and setup structure.")
       }
