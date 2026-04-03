@@ -35,11 +35,11 @@ const rl = readline.createInterface({
 
 const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
 
-let currectPath = ""
+let currectPath = "test"
 let start = true
 let splitStructure = {
-  index: null,
-  symbol: null
+  index: '0',
+  symbol: '_'
 }
 
 const pathController = async (pathInput) => {
@@ -138,23 +138,17 @@ const splitController = async () => {
       return result[splitStructure.index]
     }
 
-    const moveFile = (fileName, dest) => {
-      const filePath = path.join(currectPath, fileName)
-      const destPath = path.join(currectPath, dest, fileName)
-      fs.promises.copyFile(filePath, destPath)
-        .then(() => {
-          console.log(`split - ${fileName} moved`)
-          fs.promises.unlink(filePath)
-            .then(() => {
-              console.log(`split - ${fileName} deleted!`)
-            })
-            .catch(err => {
-              console.log(`split - can't delete ${fileName} - ${err}`)
-            })
-        })
-        .catch(err => {
-          console.log(`split - cant move ${fileName} - ${err}`)
-        })
+    const moveFile = async (fileName, dest) => {
+      try {
+        const filePath = path.join(currectPath, fileName)
+        const destPath = path.join(currectPath, dest, fileName)
+        await fs.promises.copyFile(filePath, destPath)
+        console.log(`split - ${fileName} moved`)
+        await fs.promises.unlink(filePath)
+        console.log(`split - ${fileName} deleted!`)
+      } catch (err) {
+        console.log(`split - can't delete ${fileName} - ${err}`)
+      }
     }
 
     const rangeInput = await ask("split - enter the range : ")
@@ -171,12 +165,10 @@ const splitController = async () => {
     const confirm = await ask("split - do you wanna move files? (Y,n) ")
 
     if (confirm.toLowerCase() == "y" || confirm == "") {
-      moveFiles.forEach(element => {
-        moveFile(element, folderName)
-      })
+      for (const element of moveFiles) {
+        await moveFile(element, folderName)
+      }
     }
-
-    console.log("finished")
   } catch (err) {
     console.log(`split - it has an error to process split - ${err}`)
   }
