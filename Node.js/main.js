@@ -19,6 +19,7 @@ const intro = `
 }
 3 - split => {
   enter folder name.
+  enter the file type. **IF YOU WANT TO ADD TWO OR MORE TYPES, YOU CAN SPLIT THEM WITH '-'**
   enter range. eg : '20-65'
 }
 
@@ -35,11 +36,11 @@ const rl = readline.createInterface({
 
 const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
 
-let currectPath = "test"
+let currectPath = ""
 let start = true
 let splitStructure = {
-  index: '0',
-  symbol: '_'
+  index: null,
+  symbol: null
 }
 
 const pathController = async (pathInput) => {
@@ -85,6 +86,9 @@ const filesController = async (filesInput) => {
       const files = JSON.stringify(fs.readdirSync(path.join(currectPath)), null, 2)
       fs.writeFileSync(path.join(logDir, 'filesList-log.json'), files, 'utf-8')
       console.log('files - saved to log/filesList-log.json')
+      const showFiles = await ask("do you wanna show that on terminal? (Y,n) ")
+      if(showFiles.toLowerCase() == 'y' || showFiles == '')
+        console.log(files)
     } else if (filesInput.includes('set-pattern')) {
       const structure = await ask('files - enter the structure : ')
       const symbol = await ask('files - enter the symbol : ')
@@ -115,7 +119,7 @@ const splitController = async () => {
     const splitPath = path.join(currectPath, folderName)
     const folderFiles = fs.readdirSync(currectPath)
     const currectFile = []
-
+    if(folderName === "break") return 0
     if (!checkFolder(splitPath)) {
       await fs.promises.mkdir(splitPath)
       console.log(`split - '${folderName}' created!`)
@@ -123,11 +127,11 @@ const splitController = async () => {
       console.log("split - this folder already exist.")
     }
     const fileType = await ask("split - enter the file type (without dot) : ")
-
+    const types = fileType.split('-')
     folderFiles.forEach(element => {
       const splitedElement = element.split('.')
       const type = splitedElement[splitedElement.length - 1]
-      if (fileType == type) {
+      if (types.indexOf(type) !== -1) {
         currectFile.push(element)
       }
     })
@@ -195,7 +199,7 @@ const commandManagement = async (command) => {
     } else if (command == 'split') {
       if (currectPath !== "" && splitStructure.index && splitStructure.symbol) {
         while (true) {
-          await splitController()
+          if((await splitController()) === 0) break
         }
       } else {
         console.log("enter path and setup structure.")
