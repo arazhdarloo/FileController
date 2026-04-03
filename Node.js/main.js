@@ -19,6 +19,7 @@ const intro = `
 }
 3 - split => {
   enter folder name.
+  enter the file type. **IF YOU WANT TO ADD TWO OR MORE TYPES, YOU CAN SPLIT THEM WITH '-'**
   enter range. eg : '20-65'
 }
 
@@ -35,11 +36,11 @@ const rl = readline.createInterface({
 
 const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
 
-let currectPath = "test"
+let currectPath = ""
 let start = true
 let splitStructure = {
-  index: '0',
-  symbol: '_'
+  index: null,
+  symbol: null
 }
 
 const pathController = async (pathInput) => {
@@ -123,11 +124,11 @@ const splitController = async () => {
       console.log("split - this folder already exist.")
     }
     const fileType = await ask("split - enter the file type (without dot) : ")
-
+    const types = fileType.split('-')
     folderFiles.forEach(element => {
       const splitedElement = element.split('.')
       const type = splitedElement[splitedElement.length - 1]
-      if (fileType == type) {
+      if (types.indexOf(type) !== -1) {
         currectFile.push(element)
       }
     })
