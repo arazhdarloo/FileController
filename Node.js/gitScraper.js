@@ -30,16 +30,25 @@ const instance = axios.create({
 
         const $ = cheerio.load(HtmlContent)
 
+        const courses = []
+
         let index = 1;
         $('div').each((i, element) => {
             if ($(element).attr('class') == "card course-lectures mb-1 border-0") {
+                const course = {
+                    index: null,
+                    title: null,
+                    numbers: []
+                }
                 const children = $(element).children()
                 children.each((i, element) => {
                     if (($(element).attr('class')).includes("card-header course-lecture-header")) {
                         const nameChildren = $(element).children()
                         nameChildren.each((i, element) => {
                             if (element.tagName == 'h2') {
-                                console.log(index + "  " + $(element).text())
+                                course.index = String(index)
+                                course.title = $(element).text()
+
                                 index += 1
                             }
                         })
@@ -51,11 +60,15 @@ const instance = axios.create({
                                 numbers.push($(element).attr("data-index"))
                             })
                         })
-                        console.log(numbers)
+                        course.numbers = numbers
                     }
                 })
+
+                courses.push(course)
             }
         })
+
+        console.log(courses)
     } catch (err) {
         console.log(`i got an error - ${err}`)
     }
