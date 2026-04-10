@@ -23,6 +23,34 @@ const instance = axios.create({
     }
 });
 
+const sortNumbers = (courses) => {
+    output = []
+    const lastIndex = courses[courses.length - 1]
+    const indexLength = (lastIndex.index).length
+    const courseLength = ((lastIndex.numbers)[(lastIndex.numbers).length - 1]).length
+
+    courses.forEach(element => {
+        const course = {
+            index: null,
+            title: element.title,
+            numbers: []
+        }
+        const i = element.index
+        const numbers = element.numbers
+
+        course.index = String(i).padStart(indexLength, 0)
+        const number = []
+        numbers.forEach(element => {
+            number.push(String(element).padStart(courseLength, 0))
+        })
+        course.numbers = number
+
+        output.push(course)
+    })
+
+    return output
+}
+
 (async () => {
     try {
         const response = await instance.get(URL)
@@ -68,7 +96,7 @@ const instance = axios.create({
             }
         })
 
-        console.log(courses)
+        sortNumbers(courses)
     } catch (err) {
         console.log(`i got an error - ${err}`)
     }
