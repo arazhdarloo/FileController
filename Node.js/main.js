@@ -1,6 +1,8 @@
 const readline = require('readline')
 const fs = require('fs')
 const path = require('path')
+const { url } = require('inspector')
+const scraper = require('./gitScraper')
 
 console.clear()
 
@@ -22,6 +24,9 @@ const intro = `
   enter the file type. **IF YOU WANT TO ADD TWO OR MORE TYPES, YOU CAN SPLIT THEM WITH '-'**
   enter range. eg : '20-65'
 }
+4 - scrap => {
+  enter URL  
+}
 
 enter 'help' to show this message again
 enter 'break' to close section
@@ -37,6 +42,7 @@ const rl = readline.createInterface({
 const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
 
 let currectPath = ""
+let fileType = ""
 let start = true
 let splitStructure = {
   index: null,
@@ -87,7 +93,7 @@ const filesController = async (filesInput) => {
       fs.writeFileSync(path.join(logDir, 'filesList-log.json'), files, 'utf-8')
       console.log('files - saved to log/filesList-log.json')
       const showFiles = await ask("do you wanna show that on terminal? (Y,n) ")
-      if(showFiles.toLowerCase() == 'y' || showFiles == '')
+      if (showFiles.toLowerCase() == 'y' || showFiles == '')
         console.log(files)
     } else if (filesInput.includes('set-pattern')) {
       const structure = await ask('files - enter the structure : ')
@@ -113,20 +119,27 @@ const filesController = async (filesInput) => {
   }
 }
 
-const splitController = async () => {
+const splitController = async (data = {}, skip = 0) => {
   try {
-    const folderName = await ask("split - enter folder name : ")
+    let folderName
+    if (data.title) {
+      folderName = `${data.index} - ${data.title}`
+    } else {
+      folderName = await ask("split - enter folder name : ")
+    }
     const splitPath = path.join(currectPath, folderName)
     const folderFiles = fs.readdirSync(currectPath)
     const currectFile = []
-    if(folderName === "break") return 0
+    if (folderName === "break") return 0
     if (!checkFolder(splitPath)) {
       await fs.promises.mkdir(splitPath)
       console.log(`split - '${folderName}' created!`)
     } else {
       console.log("split - this folder already exist.")
     }
-    const fileType = await ask("split - enter the file type (without dot) : ")
+    if (fileType === "") {
+      fileType = await ask("split - enter the file type (without dot) : ")
+    }
     const types = fileType.split('-')
     folderFiles.forEach(element => {
       const splitedElement = element.split('.')
@@ -155,7 +168,13 @@ const splitController = async () => {
       }
     }
 
-    const rangeInput = await ask("split - enter the range : ")
+    let rangeInput
+    if (data.numbers) {
+      const numbers = data.numbers
+      rangeInput = `${numbers[0]}-${numbers[numbers.length - 1]}`
+    } else {
+      rangeInput = await ask("split - enter the range : ")
+    }
     const range = rangeInput.split('-')
     const moveFiles = []
     console.log(range)
@@ -173,8 +192,30 @@ const splitController = async () => {
         await moveFile(element, folderName)
       }
     }
+
   } catch (err) {
     console.log(`split - it has an error to process split - ${err}`)
+  }
+}
+
+const scrapController = async () => {
+  const URL = await ask('scrap - enter URL : ')
+
+  if (URL === "break") return 0
+
+  const data = await scraper(URL)
+  const skip = await ask("scrap - do you want skip some subjects? (Y, n) ")
+  let skipNumber = 0
+  if (skip.toLowerCase() == 'y' || skip == '') {
+    skipNumber = await ask("scrap - enter your last number : ")
+  }
+  if (data.length > 0) {
+    for (const element of data) {
+      if (Number(element.index) >= Number(skipNumber)) {
+        console.log(element)
+        await splitController(element)
+      }
+    }
   }
 }
 
@@ -199,7 +240,15 @@ const commandManagement = async (command) => {
     } else if (command == 'split') {
       if (currectPath !== "" && splitStructure.index && splitStructure.symbol) {
         while (true) {
-          if((await splitController()) === 0) break
+          if ((await splitController()) === 0) break
+        }
+      } else {
+        console.log("enter path and setup structure.")
+      }
+    } else if (command == 'scrap') {
+      if (currectPath !== "" && splitStructure.index && splitStructure.symbol) {
+        while (true) {
+          if ((await scrapController()) === 0) break
         }
       } else {
         console.log("enter path and setup structure.")

@@ -1,9 +1,5 @@
 const axios = require("axios")
 const cheerio = require("cheerio")
-const fs = require("fs")
-const path = require("path")
-
-let URL = "https://git.ir/api/post/get-lectures/481285/?lang=fa";
 
 const instance = axios.create({
     timeout: 15000,
@@ -41,7 +37,7 @@ const sortNumbers = (courses) => {
         course.index = String(i).padStart(indexLength, 0)
         const number = []
         numbers.forEach(element => {
-            number.push(String(element).padStart(courseLength, 0))
+            number.push(String(element).padStart(3, 0))
         })
         course.numbers = number
 
@@ -51,7 +47,7 @@ const sortNumbers = (courses) => {
     return output
 }
 
-(async () => {
+const scraper = async (URL) => {
     try {
         const response = await instance.get(URL)
         const HtmlContent = response.data
@@ -96,8 +92,10 @@ const sortNumbers = (courses) => {
             }
         })
 
-        sortNumbers(courses)
+        return sortNumbers(courses)
     } catch (err) {
         console.log(`i got an error - ${err}`)
     }
-})()
+}
+
+module.exports = scraper
