@@ -44,6 +44,7 @@ const ask = (query) => new Promise((resolve) => rl.question(query, resolve));
 let currectPath = ""
 let fileType = ""
 let start = true
+let moveState = false
 let splitStructure = {
   index: null,
   symbol: null
@@ -185,9 +186,20 @@ const splitController = async (data = {}, skip = 0) => {
     })
 
     console.log(moveFiles)
-    const confirm = await ask("split - do you wanna move files? (Y,n) ")
+    if (!moveState) {
+      const confirm = await ask("split - do you wanna move files? (Y,n) ")
 
-    if (confirm.toLowerCase() == "y" || confirm == "") {
+      if (confirm.toLowerCase() == "--y") {
+        moveState = true
+        for (const element of moveFiles) {
+          await moveFile(element, folderName)
+        }
+      } else if (confirm.toLowerCase() == "y" || confirm == "") {
+        for (const element of moveFiles) {
+          await moveFile(element, folderName)
+        }
+      }
+    } else {
       for (const element of moveFiles) {
         await moveFile(element, folderName)
       }
